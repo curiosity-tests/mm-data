@@ -1,9 +1,28 @@
 name: Checkstyle
+run-name: "Checkstyle ${{ inputs.leg || github.event_name }} ${{ inputs.racecar_run }}"
 
 on:
   pull_request:
     branches: [ main ]
 
+  workflow_dispatch:
+    inputs:
+      leg:
+        description: "baseline (uninstrumented) or instrumented (under chalk/curiosity)"
+        type: choice
+        options: [instrumented, baseline]
+        default: baseline
+      profile:
+        description: "CrashOverride chalk profile"
+        type: string
+        default: curiosity-tests-racecar
+      racecar_run:
+        description: "racecar correlation token, echoed into the run name"
+        type: string
+        default: ""
+
+env:
+  CHALK_ON: ${{ inputs.leg == 'instrumented' }}
 permissions:
   contents: read
 
@@ -34,9 +53,11 @@ jobs:
       # Formatting first: it reports every violation in one run.
       # The ratchet in build.gradle.kts compares against origin/main, which a shallow checkout does not have.
       - name: Fetch main for the formatting ratchet
+        continue-on-error: true   # racecar: scan/report step, must not fail the build
         run: git fetch --depth=1 origin main
 
       - name: Formatting (Spotless)
+        continue-on-error: true   # racecar: scan/report step, must not fail the build
         run: |
           ./gradlew spotlessApply
           if git diff --quiet; then
@@ -65,6 +86,7 @@ jobs:
           exit 1
 
       - name: Checkstyle
+        continue-on-error: true   # racecar: scan/report step, must not fail the build
         run: ./gradlew checkstyleMain
 
       - name: Upload Test Logs on Failure
