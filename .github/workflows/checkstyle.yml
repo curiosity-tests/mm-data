@@ -53,11 +53,11 @@ jobs:
       # Formatting first: it reports every violation in one run.
       # The ratchet in build.gradle.kts compares against origin/main, which a shallow checkout does not have.
       - name: Fetch main for the formatting ratchet
-        continue-on-error: true   # racecar: scan/report step, must not fail the build
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         run: git fetch --depth=1 origin main
 
       - name: Formatting (Spotless)
-        continue-on-error: true   # racecar: scan/report step, must not fail the build
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         run: |
           ./gradlew spotlessApply
           if git diff --quiet; then
@@ -86,7 +86,7 @@ jobs:
           exit 1
 
       - name: Checkstyle
-        continue-on-error: true   # racecar: scan/report step, must not fail the build
+        continue-on-error: true   # racecar: scan/report/push step, must not fail the build
         run: ./gradlew checkstyleMain
 
       - name: Upload Test Logs on Failure
